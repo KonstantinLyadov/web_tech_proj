@@ -45,17 +45,19 @@ function filesGetList($search_str) {
         if (($dh = opendir($dir)) !== false) {
             $fileList = '<ul id="info" class="info_b">';
             while (($file = readdir($dh)) !== false) {
-                if ($file == '.' || $file == '..')
+                if ($file == '.' || $file == '..' || $file == 'index.php')
                     continue;
                 if ($search_str && !substr_count($file, $search_str))
                     continue;
                 $href = $dir . $file;
                 $fileList .= "<li>[" . ++$i . "]$file<br/>"
                         . "<a href=\"?getfile=" . ($file) . "\">Скачать</a>&nbsp;"
-                        . "<a href=\"?delfile=" . ($file) . "\">Удалить</a>"
+                        //. "<a href=\"?delfile=" . ($file) . "\">Удалить</a>"
+                        //. "<a href=\"javascript:ConfirmDel('" . ($file) . "')\">Удалить</a>"
+                        . "<a href=\"?delfile=" . ($file) . "\" onclick=\"return ConfirmDel('" . ($file) . "')\">Удалить</a>"
                         . "</li>";
             }
-            $fileList .= '<li><a class="upllnk" href ="#">Загрузить ещё файл</a></li>';
+            $fileList .= '<li><a class="cupllnk" href ="#">Загрузить ещё файл</a></li>';
             $fileList .= '</ul>';
 
         }
@@ -106,6 +108,7 @@ function filesRemove($fn) {
     $dir .= $uplDir;
     if (is_dir($dir) && is_file($dir . $fn)) {
         unlink($dir . $fn);
+        removeFileInfo($fn);
         return TRUE;
     } else return FALSE;
 }
@@ -125,13 +128,29 @@ function filesUpload($fn, $fname) {
         if (move_uploaded_file($fn, $destination)) {
             //print "Файл успешно загружен <br>";
             //$result = false;
+            insertFileInfo($fn, $_FILES['myfile']['size']);
         } else {
             $result = "Произошла ошибка при загрузке файла. Некоторая отладочная информация:<br>" .
                     print_r($_FILES);
         }
 
-        header("Location:index.php");
+        header("Location:index.php?page=files");
     }
+}
+
+function insertFileInfo($fn, $size){
+    global $userId;
+    $query = "INSERT INTO t_files(user_id,name_stored,name_original,size) VALUES('$userId', '$fn', '$fn', '$size');";
+    $result = dbQuery($query);
+    return $fileInserted = getLastId();
+    
+}
+
+function removeFileInfo($fn){
+    global $userId;
+    $query = "DELETE FROM t_files WHERE userid='$userId' AND name_stored='$fn';";
+    $result = dbQuery($query);
+    return ($result->num_rows>0);
 }
 
 ?>
