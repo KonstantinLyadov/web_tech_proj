@@ -38,5 +38,6 @@ if ($UserLog && $UserPas) {
     } //else {
     //header('Location: login_frm.php');
 }
-header('Location: index.php');
+//header('Location: index.php');
+echo '<a href="index.php">home</a>';
 ?>
